@@ -15,27 +15,46 @@ pipeline {
 
         stage('Prepare') {
             steps {
-                sh '''
-                set -e
-                NEED_INSTALL=0
-                for cmd in cmake clang-format arm-none-eabi-gcc arm-none-eabi-objcopy; do
-                    if ! command -v "$cmd" >/dev/null 2>&1; then
-                        NEED_INSTALL=1
-                    fi
-                done
+                script {
+                    // Try to use a global shared library named 'led-shared' (branch 'main')
+                    def usedShared = false
+                    try {
+                        library 'led-shared@main'
+                        if (this.metaClass.respondsTo(this, 'prepareEnvironment')) {
+                            echo 'Using shared library: led-shared.prepareEnvironment()'
+                            prepareEnvironment(env.PROJECT_DIR)
+                            usedShared = true
+                        } else {
+                            echo 'Shared library loaded but prepareEnvironment() not found.'
+                        }
+                    } catch (err) {
+                        echo "Shared library not available or failed to load: ${err}"
+                    }
 
-                if [ "$NEED_INSTALL" -eq 1 ]; then
-                    if command -v sudo >/dev/null 2>&1; then
-                        sudo apt-get update
-                        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake clang-format gcc-arm-none-eabi binutils-arm-none-eabi build-essential || true
-                    else
-                        apt-get update || true
-                        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake clang-format gcc-arm-none-eabi binutils-arm-none-eabi build-essential || true
-                    fi
-                else
-                    echo "Required tools already installed"
-                fi
-                '''
+                    if (!usedShared) {
+                        sh '''
+                        set -e
+                        NEED_INSTALL=0
+                        for cmd in cmake clang-format arm-none-eabi-gcc arm-none-eabi-objcopy; do
+                            if ! command -v "$cmd" >/dev/null 2>&1; then
+                                NEED_INSTALL=1
+                            fi
+                        done
+
+                        if [ "$NEED_INSTALL" -eq 1 ]; then
+                            if command -v sudo >/dev/null 2>&1; then
+                                sudo apt-get update
+                                sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake clang-format gcc-arm-none-eabi binutils-arm-none-eabi build-essential || true
+                            else
+                                apt-get update || true
+                                DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake clang-format gcc-arm-none-eabi binutils-arm-none-eabi build-essential || true
+                            fi
+                        else
+                            echo "Required tools already installed"
+                        fi
+                        '''
+                    }
+                }
             }
         }
 
