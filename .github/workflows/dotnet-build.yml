@@ -11,12 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Show current directory
+        run: |
+          pwd
+          ls -R
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - run: dotnet restore dotnet-console-app/dotnet-console-app.csproj
+      - name: Restore
+        run: dotnet restore dotnet-console-app/dotnet-console-app.csproj
 
-      - run: dotnet build dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-restore
+      - name: Build
+        run: dotnet build dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-restore
 
-      - run: dotnet run --project dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-build
+      - name: Run
+        run: dotnet run --project dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-build
