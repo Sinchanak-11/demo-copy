@@ -1,0 +1,22 @@
+name: .NET Console CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-run:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - run: dotnet restore dotnet-console-app/dotnet-console-app.csproj
+
+      - run: dotnet build dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-restore
+
+      - run: dotnet run --project dotnet-console-app/dotnet-console-app.csproj --configuration Release --no-build
